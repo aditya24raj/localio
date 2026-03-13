@@ -1,5 +1,4 @@
 const BASE_URL = "https://api.imdbapi.dev";
-const BASE_URL_TORRENTIO = "https://torrentio.strem.fun/providers=yts,eztv,rarbg,1337x%7Cqualityfilter=brremux,hdrall,dolbyvision,dolbyvisionwithhdr,threed,4k,other,scr,cam,unknown%7Climit=1";
 
 // let results = {
 //     "titles": [
@@ -293,53 +292,58 @@ const BASE_URL_TORRENTIO = "https://torrentio.strem.fun/providers=yts,eztv,rarbg
 let results = [];
 
 async function search(e) {
-    document.querySelector("#results").innerHTML = "";
-    
-    const cache = await caches.open('localio-cache');
+    try {
+        document.querySelector("#results").innerHTML = "";
 
-    const query = encodeURIComponent(document.querySelector("#imdb-search").value);
-    const url = `/search/titles?query=${query}`;
+        const cache = await caches.open('localio-cache');
 
-    let response = await cache.match(url);
-    if (!response) {
-        response = await fetch(BASE_URL + url);
-        await cache.put(url, response.clone());
-    }
+        const query = encodeURIComponent(document.querySelector("#imdb-search").value);
+        const url = `/search/titles?query=${query}`;
 
-    if (response.status !== 200) {
-        error = JSON.stringify(await response.json()); 
-        document.querySelector("#results").innerHTML = `<div style="color: red"> <p>STATUS CODE: ${response.status}</p> <p>ERROR: ${error}</p></div>`;
-        return;
-    }
-    
-    results = await response.json(); 
-
-    let resultsHtml = "<h3 style='text-decoration: underline;'>search results</h3>";
-    let index = 0;
-    for (const r of results.titles) {
-        if (r?.primaryImage?.url) {
-            index += 1;
-            resultsHtml += `
-            <div class="result-card" style='display:flex; margin: 20px 0px; cursor:pointer; min-width: 100%;' data-type="${r?.type}" data-imdbId="${r?.id}">
-                <a href="pages/${r?.type === 'movie' ? 'movie' : 'tv-series'}?q=${r?.id}" style="text-decoration:none; display: flex; gap: 10px; align-items: center">
-                    <div>
-                        <div style="font-weight:bolder; color: gray; margin-bottom: 3px;"># ${`${index}`.padStart(3, 0)}</div>
-                        <img src="${r?.primaryImage?.url}" width="100px" height="auto" />
-                    </div>
-                    
-                    <div style="">
-                        <div class="original-title" style="font-weight:bolder; text-decoration: underline;">${r?.originalTitle}</div> 
-                        <div style="color: gray;">
-                            ${r?.startYear ? r?.startYear : ''} &nbsp;&nbsp;&nbsp; ${r?.rating?.aggregateRating != null ? '⭐ ' + r?.rating?.aggregateRating : ''}
-                        </div>
-                        <br/>
-                    </div>
-                </a>
-            </div>`;
+        let response = await cache.match(url);
+        if (!response) {
+            response = await fetch(BASE_URL + url);
+            await cache.put(url, response.clone());
         }
-    }
 
-    document.querySelector("#results").innerHTML = resultsHtml;
+        if (response.status !== 200) {
+            error = JSON.stringify(await response.json());
+            document.querySelector("#results").innerHTML = `<div style="color: red"> <p>STATUS CODE: ${response.status}</p> <p>ERROR: ${error}</p></div>`;
+            return;
+        }
+
+        results = await response.json();
+
+        let resultsHtml = "<h3 style='text-decoration: underline;'>search results</h3>";
+        let index = 0;
+        for (const r of results.titles) {
+            if (r?.primaryImage?.url) {
+                const detailsURL = `pages/${r?.type === 'movie' ? 'movie' : 'tv-series'}?id=${r?.id}&title=${r?.originalTitle}&img=${r?.primaryImage?.url}&year=${r?.startYear ? r?.startYear : ''}&rating=${r?.rating?.aggregateRating != null ? r?.rating?.aggregateRating : ''}`;
+
+                index += 1;
+                resultsHtml += `
+            <div class="result-card" style='margin: 20px 0px; max-width: 500px;' data-type="${r?.type}" data-imdbId="${r?.id}">
+                <div style="font-weight:bolder; color: gray; margin-bottom: 3px;"># ${`${index}`.padStart(3, 0)}</div>
+                <a href="${detailsURL}" style="display: block; width: fit-content;">
+                    <img src="${r?.primaryImage?.url}" width="100px" height="auto" />
+                </a>
+
+                <a href="${detailsURL}">
+                    <div class="original-title" style="font-weight:bolder; text-decoration: underline;">${r?.originalTitle}</div> 
+                </a>
+
+                <div style="color: gray;">
+                    ${r?.startYear ? r?.startYear : ''} &nbsp;&nbsp;&nbsp; ${r?.rating?.aggregateRating != null ? '⭐ ' + r?.rating?.aggregateRating : ''}
+                </div>
+                <br/>
+            </div>`;
+            }
+        }
+
+        document.querySelector("#results").innerHTML = resultsHtml;
+    } catch (error) {
+        alert("search failed: ", JSON.stringify(error));
+    }
 }
 
 
