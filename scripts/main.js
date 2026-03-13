@@ -328,7 +328,7 @@ async function search(e) {
                     </div>
                     
                     <div style="">
-                        <div class="original-title" style="font-weight:bolder">${r?.originalTitle}</div> 
+                        <div class="original-title" style="font-weight:bolder; text-decoration: underline;">${r?.originalTitle}</div> 
                         <div style="color: gray;">
                             ${r?.startYear ? r?.startYear : ''} &nbsp;&nbsp;&nbsp; ${r?.rating?.aggregateRating != null ? '⭐ ' + r?.rating?.aggregateRating : ''}
                         </div>
