@@ -51,12 +51,11 @@ async function search(clearCache) {
 
                         <img src="${r?.primaryImage?.url}" width="100%" height="auto" style="border-radius: 6px;" />
                         <div>
-                            ${
-                                r?.type === 'movie'
-                                    ?
-                                    `<div id="movie-magnets-${r?.id}">Loading...</div>`
-                                    :
-                                    `<br/>
+                            ${r?.type === 'movie'
+                        ?
+                        `<div id="movie-magnets-${r?.id}">Loading...</div>`
+                        :
+                        `<br/>
                                     <div style="display: flex; gap: 10px; max-width: 300px">
                                         <div>
                                             <label for="seasons-${r?.id}">Season</label>
@@ -79,7 +78,7 @@ async function search(clearCache) {
                                     <br/>
                                     <div id="tv-magnets-${r?.id}"></div>
                                     `
-                            }
+                    }
                         </div>
                     </div>
                     
@@ -101,7 +100,7 @@ async function search(clearCache) {
     }
 }
 
-async function getMagnets(id, type, season=null, episode=null) {
+async function getMagnets(id, type, season = null, episode = null) {
     if (!id || !type) {
         return `<br/><div style="color:red">invalid id "${id}" or type "${type}" </div><br/>`
     }
@@ -138,14 +137,14 @@ async function getMagnets(id, type, season=null, episode=null) {
             const magnet = s.infoHash
                 ? `magnet:?xt=urn:btih:${s.infoHash}`
                 : "#";
-            
+
             html += `<a style="word-break: break-word;" href=${magnet}>${s.title}</a><br/><br/>`;
         });
 
         return html;
 
     } catch (err) {
-       return "Error fetching streams";
+        return "Error fetching streams";
     }
 }
 
@@ -153,7 +152,7 @@ async function getMagnetsMovie(id, type) {
     try {
         const html = await getMagnets(id, type, null, null);
         const movieMagnetsElement = document.querySelector(`#movie-magnets-${id}`);
-        movieMagnetsElement.innerHTML = html;   
+        movieMagnetsElement.innerHTML = html;
     } catch (error) {
         console.log("failed get magnets for ", type, id);
     }
@@ -200,9 +199,9 @@ async function getSeasons(id) {
     let optionsHTML = "<option>-</option>"
     for (const s of data.seasons) {
         optionsHTML += `<option value="${s.season}">${s.season}</option>`;
-    } 
+    }
 
-    select.innerHTML = optionsHTML;    
+    select.innerHTML = optionsHTML;
     select.dataset.loaded = "true";
 }
 
@@ -211,7 +210,7 @@ async function getEpisodes(event, id) {
         return;
     }
 
-    document.querySelector(`#tv-magnets-${id}`).innerHTML  = '';
+    document.querySelector(`#tv-magnets-${id}`).innerHTML = '';
 
     const select = document.querySelector(`#episodes-${id}`);
 
@@ -238,14 +237,14 @@ async function getEpisodes(event, id) {
             ${e?.episodeNumber}. ${e?.title}
             ${e?.releaseDate?.day ? e?.releaseDate?.day + "/" : ""}${e?.releaseDate?.month ? e?.releaseDate?.month + "/" : ""}${e?.releaseDate?.year ? e?.releaseDate?.year : ""}
         </option>`;
-    } 
+    }
 
     select.innerHTML = optionsHTML;
 }
 
 async function cachedFetch(url) {
     const cache = await caches.open('localio-cache');
-        
+
     let response = await cache.match(url);
     if (!response) {
         response = await fetch(url);
@@ -258,3 +257,30 @@ async function cachedFetch(url) {
 }
 
 
+// Register the service worker
+if ('serviceWorker' in navigator) {
+    // Wait for the 'load' event to not block other work
+    window.addEventListener('load', async () => {
+        // Try to register the service worker.
+        try {
+            // Capture the registration for later use, if needed
+            let reg;
+
+            // Use ES Module version of our Service Worker in development
+            //   if (import.meta.env?.DEV) {
+            //     reg = await navigator.serviceWorker.register('/scripts/service-worker.js', {
+            //       type: 'module',
+            //     });
+            //   } else {
+            //     // In production, use the normal service worker registration
+            //     reg = await navigator.serviceWorker.register('/scripts/service-worker.js');
+            //   }
+
+            // In production, use the normal service worker registration
+            reg = await navigator.serviceWorker.register('/scripts/service-worker.js');
+            console.log('Service worker registered! 😎', reg);
+        } catch (err) {
+            console.log('😥 Service worker registration failed: ', err);
+        }
+    });
+}
