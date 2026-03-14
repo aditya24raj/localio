@@ -4,29 +4,35 @@ let results = [];
 
 async function search(e) {
     try {
-        document.querySelector("#results").innerHTML = "Loading...";
+        const resultsElement = document.querySelector("#results");
+        resultsElement.innerHTML = "Loading...";
 
         const query = encodeURIComponent(document.querySelector("#imdb-search").value);
+        if (!query) {
+            alert("Enter a search term");
+            return;
+        }
         const url = `${BASE_URL}/search/titles?query=${query}`;
 
         let response = await cachedFetch(url);
 
         if (response.status !== 200) {
             error = JSON.stringify(await response.json());
-            document.querySelector("#results").innerHTML = `<div style="color: red"> <p>STATUS CODE: ${response.status}</p> <p>ERROR: ${error}</p></div>`;
+            resultsElement.innerHTML = `<div style="color: red"> <p>STATUS CODE: ${response.status}</p> <p>ERROR: ${error}</p></div>`;
             return;
         }
 
         results = await response.json();
 
-        document.querySelector("#results").innerHTML = "";
+        resultsElement.innerHTML = "";
         let resultsHtml = `<h3 style='color: gray;'>search results</h3>`;
         let index = 0;
+        let movieIds = [];
         for (const r of results.titles) {
             if (r?.primaryImage?.url) {
                 index += 1;
                 resultsHtml += `
-                    <div class="result-card" style='background-color: black; padding: 12px; border-radius: 12px; margin: 10px 0px; max-width: 500px;' data-type="${r?.type}" data-imdbId="${r?.id}">
+                    <div onhover="alert()" class="result-card" style='background-color: black; padding: 12px; border-radius: 12px; margin: 10px 0px; max-width: 500px;' data-type="${r?.type}" data-imdbId="${r?.id}">
                         <div style="font-weight:900; color: gray; margin-bottom: 6px;"># ${`${index}`.padStart(3, 0)}</div>
                         
                         <div class="original-title" style="font-weight:bolder;">${r?.originalTitle}</div> 
@@ -42,7 +48,7 @@ async function search(e) {
                             ${
                                 r?.type === 'movie'
                                     ?
-                                    `<div>${await getMagnets(r?.id, r?.type, null, null)}</div>`
+                                    `<div id="movie-magnets-${r?.id}">Loading...</div>`
                                     :
                                     `<br/>
                                     <div style="display: flex; gap: 10px; max-width: 300px">
@@ -72,9 +78,16 @@ async function search(e) {
                     </div>
                     
                 `;
-                document.querySelector("#results").innerHTML += resultsHtml;
-                resultsHtml = "";
+
+                if (r?.type === "movie") {
+                    movieIds.push(r.id);
+                }
             }
+        }
+        resultsElement.innerHTML += resultsHtml;
+
+        for (const id of movieIds) {
+            getMagnetsMovie(id, "movie");
         }
 
     } catch (error) {
@@ -100,7 +113,7 @@ async function getMagnets(id, type, season=null, episode=null) {
         let response = await cachedFetch(url);
 
         if (response.status !== 200) {
-            error = JSON.stringify(await response.json());
+            let error = JSON.stringify(await response.json());
             return `<br/><div style="color: red"> <p>STATUS CODE: ${response.status}</p> <p>ERROR: ${error}</p></div><br/>`;
         }
 
@@ -130,15 +143,25 @@ async function getMagnets(id, type, season=null, episode=null) {
     }
 }
 
+async function getMagnetsMovie(id, type) {
+    try {
+        const html = await getMagnets(id, type, null, null);
+        const movieMagnetsElement = document.querySelector(`#movie-magnets-${id}`);
+        movieMagnetsElement.innerHTML = html;   
+    } catch (error) {
+        console.log("failed get magnets for ", type, id);
+    }
+}
+
 async function getMagnetsTv(id, type) {
-    console.log("getMagnetsTv");
-    document.querySelector(`#tv-magnets-${id}`).innerHTML = "";
+    const tvMagnetsElement = document.querySelector(`#tv-magnets-${id}`);
+    tvMagnetsElement.innerHTML = "";
 
     const season = document.querySelector(`#seasons-${id}`).value;
     const episode = document.querySelector(`#episodes-${id}`).value;
 
     const html = await getMagnets(id, type, season, episode);
-    document.querySelector(`#tv-magnets-${id}`).innerHTML = html;
+    tvMagnetsElement.innerHTML = html;
 }
 
 async function getSeasons(id) {
@@ -207,7 +230,7 @@ async function getEpisodes(event, id) {
         optionsHTML += `
         <option value="${e?.episodeNumber}">
             ${e?.episodeNumber}. ${e?.title}
-            <span>${e?.releaseDate?.day ? e?.releaseDate?.day + "/" : ""}${e?.releaseDate?.month ? e?.releaseDate?.month + "/" : ""}${e?.releaseDate?.year ? e?.releaseDate?.year : ""}</span>
+            ${e?.releaseDate?.day ? e?.releaseDate?.day + "/" : ""}${e?.releaseDate?.month ? e?.releaseDate?.month + "/" : ""}${e?.releaseDate?.year ? e?.releaseDate?.year : ""}
         </option>`;
     } 
 
