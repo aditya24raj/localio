@@ -6,16 +6,10 @@ async function search(e) {
     try {
         document.querySelector("#results").innerHTML = "Loading...";
 
-        const cache = await caches.open('localio-cache');
-
         const query = encodeURIComponent(document.querySelector("#imdb-search").value);
-        const url = `/search/titles?query=${query}`;
+        const url = `${BASE_URL}/search/titles?query=${query}`;
 
-        let response = await cache.match(url);
-        if (!response) {
-            response = await fetch(BASE_URL + url);
-            await cache.put(url, response.clone());
-        }
+        let response = await cachedFetch(url);
 
         if (response.status !== 200) {
             error = JSON.stringify(await response.json());
@@ -74,20 +68,13 @@ async function getMagnets(id, type) {
     }
 
     try {
-        const cache = await caches.open('localio-cache');
-        
-        let response = await cache.match(url);
-        if (!response) {
-            response = await fetch(url);
-            await cache.put(url, response.clone());
-        }
+        let response = await cachedFetch(url);
 
         if (response.status !== 200) {
             error = JSON.stringify(await response.json());
             return `<div style="color: red"> <p>STATUS CODE: ${response.status}</p> <p>ERROR: ${error}</p></div>`;
         }
 
-        response = await fetch(url);
         const data = await response.json();
 
         const streams = data.streams || [];
@@ -112,6 +99,18 @@ async function getMagnets(id, type) {
     } catch (err) {
        return "Error fetching streams";
     }
+}
+
+async function cachedFetch(url) {
+    const cache = await caches.open('localio-cache');
+        
+    let response = await cache.match(url);
+    if (!response) {
+        response = await fetch(url);
+        await cache.put(url, response.clone());
+    }
+
+    return response;
 }
 
 
