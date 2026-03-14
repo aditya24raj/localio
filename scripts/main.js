@@ -2,18 +2,24 @@ const BASE_URL = "https://api.imdbapi.dev";
 
 let results = [];
 
-async function search(e) {
+async function search(clearCache) {
     try {
         const resultsElement = document.querySelector("#results");
-        resultsElement.innerHTML = "Loading...";
 
         const query = encodeURIComponent(document.querySelector("#imdb-search").value);
         if (!query) {
             alert("Enter a search term");
             return;
         }
-        const url = `${BASE_URL}/search/titles?query=${query}`;
 
+        if (clearCache) {
+            resultsElement.innerHTML = "Removing cache...<br/>Loading...";
+            await caches.delete("localio-cache");
+        } else {
+            resultsElement.innerHTML = "Loading...";
+        }
+
+        const url = `${BASE_URL}/search/titles?query=${query}`;
         let response = await cachedFetch(url);
 
         if (response.status !== 200) {

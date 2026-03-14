@@ -13,11 +13,12 @@
 
 <body>
     <main>
-        <h1>localio</h1>
-    
-        <input type="search" id="imdb-search" name="q" />
-        <button onclick="search(event)">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</button>
+        <h1 style="max-width: fit-content;"><a href="/">localio</a></h1>
 
+        <input type="search" id="imdb-search" name="q" />
+        <button style="margin-left: 9px" title="search" onclick="search(false)">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</button>
+        <button style="margin-left: 9px;background-color: salmon;" title="clear cache & search" onclick="search(true)">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</button>
+        
         <br />
         <br />
         <br />
