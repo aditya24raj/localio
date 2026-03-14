@@ -4,7 +4,7 @@ let results = [];
 
 async function search(e) {
     try {
-        document.querySelector("#results").innerHTML = "";
+        document.querySelector("#results").innerHTML = "Loading...";
 
         const cache = await caches.open('localio-cache');
 
@@ -25,32 +25,35 @@ async function search(e) {
 
         results = await response.json();
 
+        document.querySelector("#results").innerHTML = "";
         let resultsHtml = "<h3 style='text-decoration: underline;'>search results</h3>";
         let index = 0;
         for (const r of results.titles) {
             if (r?.primaryImage?.url) {
                 index += 1;
                 resultsHtml += `
-            <div class="result-card" style='margin: 20px 0px; max-width: 500px;' data-type="${r?.type}" data-imdbId="${r?.id}">
-                <div style="font-weight:bolder; color: gray; margin-bottom: 3px;"># ${`${index}`.padStart(3, 0)}</div>
-                <img src="${r?.primaryImage?.url}" width="100px" height="auto" />
-                    
-                
-                <div class="original-title" style="font-weight:bolder;">${r?.originalTitle}</div> 
-                <div style="color: gray;">
-                    ${r?.startYear ? r?.startYear : ''} 
-                    &nbsp;&nbsp;&nbsp; 
-                    ${r?.rating?.aggregateRating != null ? '⭐ ' + r?.rating?.aggregateRating : ''}
-                </div>
-                <div>
-                    <span>${await getMagnets(r?.id, r?.type)}</span>
-                </div>
-                <br/>
-            </div>`;
+                    <div class="result-card" style='margin: 20px 0px; max-width: 500px;' data-type="${r?.type}" data-imdbId="${r?.id}">
+                        <div style="font-weight:bolder; color: gray; margin-bottom: 3px;"># ${`${index}`.padStart(3, 0)}</div>
+                        <img src="${r?.primaryImage?.url}" width="100px" height="auto" />
+                            
+                        
+                        <div class="original-title" style="font-weight:bolder;">${r?.originalTitle}</div> 
+                        <div style="color: gray;">
+                            ${r?.startYear ? r?.startYear : ''} 
+                            &nbsp;&nbsp;&nbsp; 
+                            ${r?.rating?.aggregateRating != null ? '⭐ ' + r?.rating?.aggregateRating : ''}
+                        </div>
+                        <div>
+                            <span>${await getMagnets(r?.id, r?.type)}</span>
+                        </div>
+                        <br/>
+                    </div>
+                `;
+                document.querySelector("#results").innerHTML += resultsHtml;
+                resultsHtml = "";
             }
         }
 
-        document.querySelector("#results").innerHTML = resultsHtml;
     } catch (error) {
         alert("search failed: ", JSON.stringify(error.stack));
     }
