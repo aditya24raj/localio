@@ -38,9 +38,36 @@ async function search(e) {
                             ${r?.rating?.aggregateRating != null ? '⭐ ' + r?.rating?.aggregateRating : ''}
                         </div>
                         <div>
-                            <span>${await getMagnets(r?.id, r?.type)}</span>
+                            ${
+                                r?.type === 'movie'
+                                    ?
+                                    `<div>${await getMagnets(r?.id, r?.type, null, null)}</div>`
+                                    :
+                                    `<br/>
+                                    <div style="display: flex; gap: 10px; max-width: 300px">
+                                        <div>
+                                            <label for="seasons-${r?.id}">Season</label>
+                                            <br/>
+                                            <select style="max-width: 50px; min-width: 50px;" id="seasons-${r?.id}" onclick="getSeasons('${r?.id}')" onchange="getEpisodes(event, '${r?.id}')">
+                                                <option value="">-</option>
+                                                <option value="">Loading...</option>
+                                            </select>
+                                        </div>
+
+                                        <div>
+                                            <label for="episodes-${r?.id}">Episode</label>
+                                            <br/>
+                                            <select style="min-width: 100px" id="episodes-${r?.id}" onchange="getMagnetsTv('${r?.id}', '${r?.type}')">
+                                                <option value="">-</option>
+                                                <option value="">Loading...</option>                                                
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <br/>
+                                    <div id="tv-magnets-${r?.id}"></div>
+                                    `
+                            }
                         </div>
-                        <br/>
                     </div>
                 `;
                 document.querySelector("#results").innerHTML += resultsHtml;
@@ -53,7 +80,7 @@ async function search(e) {
     }
 }
 
-async function getMagnets(id, type) {
+async function getMagnets(id, type, season=null, episode=null) {
     if (!id || !type) {
         return `<div style="color:red">invalid id "${id}" or type "${type}" </div>`
     }
@@ -64,7 +91,7 @@ async function getMagnets(id, type) {
     if (type === "movie") {
         url = `${base_url}/stream/movie/${id}.json`;
     } else {
-        return `TODO`;
+        url = `${base_url}/stream/series/${id}:${season}:${episode}.json`;
     }
 
     try {
@@ -101,13 +128,99 @@ async function getMagnets(id, type) {
     }
 }
 
+async function getMagnetsTv(id, type) {
+    console.log("getMagnetsTv");
+    document.querySelector(`#tv-magnets-${id}`).innerHTML = "";
+
+    const season = document.querySelector(`#seasons-${id}`).value;
+    const episode = document.querySelector(`#episodes-${id}`).value;
+
+    const html = await getMagnets(id, type, season, episode);
+    document.querySelector(`#tv-magnets-${id}`).innerHTML = html;
+}
+
+async function getSeasons(id) {
+    if (!id) {
+        return;
+    }
+
+    const select = document.querySelector(`#seasons-${id}`);
+
+    if (select.dataset.loaded) {
+        return;
+    }
+
+    select.innerHTML = `
+    <option>-</option>
+    <option>Loading...</option>
+    `;
+
+    let url = `${BASE_URL}/titles/${id}/seasons`;
+    let response = await cachedFetch(url);
+
+    if (response.status !== 200) {
+        error = JSON.stringify(await response.json());
+        alert("Failed to get seasons!");
+        return;
+    }
+
+    const data = await response.json();
+
+    let optionsHTML = "<option>-</option>"
+    for (const s of data.seasons) {
+        optionsHTML += `<option value="${s.season}">${s.season}</option>`;
+    } 
+
+    select.innerHTML = optionsHTML;    
+    select.dataset.loaded = "true";
+}
+
+async function getEpisodes(event, id) {
+    if (!id || !event.target.value) {
+        return;
+    }
+
+    document.querySelector(`#tv-magnets-${id}`).innerHTML  = '';
+
+    const select = document.querySelector(`#episodes-${id}`);
+
+    select.innerHTML = `
+        <option>-</option>
+        <option>Loading...</option>
+    `;
+
+    let url = `${BASE_URL}/titles/${id}/episodes?season=${event.target.value}&pageSize=50`;
+    let response = await cachedFetch(url);
+
+    if (response.status !== 200) {
+        error = JSON.stringify(await response.json());
+        alert("Failed to get episdoes!");
+        return;
+    }
+
+    const data = await response.json();
+
+    let optionsHTML = "<option>-</option>"
+    for (const e of data.episodes) {
+        optionsHTML += `
+        <option value="${e?.episodeNumber}">
+            ${e?.episodeNumber}. ${e?.title}
+            <span> ${e?.releaseDate ? `${e.releaseDate?.day}/${e?.releaseDate?.month}/${e?.releaseDate?.year}` : ""}</span>
+        </option>`;
+    } 
+
+    select.innerHTML = optionsHTML;
+}
+
 async function cachedFetch(url) {
     const cache = await caches.open('localio-cache');
         
     let response = await cache.match(url);
     if (!response) {
         response = await fetch(url);
-        await cache.put(url, response.clone());
+        if (response.status === 200) {
+            await cache.put(url, response.clone());
+        }
     }
 
     return response;
