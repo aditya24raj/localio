@@ -20,23 +20,24 @@ async function search(e) {
         results = await response.json();
 
         document.querySelector("#results").innerHTML = "";
-        let resultsHtml = "<h3 style='text-decoration: underline;'>search results</h3>";
+        let resultsHtml = `<h3 style='color: gray;'>search results</h3>`;
         let index = 0;
         for (const r of results.titles) {
             if (r?.primaryImage?.url) {
                 index += 1;
                 resultsHtml += `
-                    <div class="result-card" style='margin: 20px 0px; max-width: 500px;' data-type="${r?.type}" data-imdbId="${r?.id}">
-                        <div style="font-weight:bolder; color: gray; margin-bottom: 3px;"># ${`${index}`.padStart(3, 0)}</div>
-                        <img src="${r?.primaryImage?.url}" width="100px" height="auto" />
-                            
+                    <div class="result-card" style='background-color: black; padding: 12px; border-radius: 12px; margin: 10px 0px; max-width: 500px;' data-type="${r?.type}" data-imdbId="${r?.id}">
+                        <div style="font-weight:900; color: gray; margin-bottom: 6px;"># ${`${index}`.padStart(3, 0)}</div>
                         
                         <div class="original-title" style="font-weight:bolder;">${r?.originalTitle}</div> 
-                        <div style="color: gray;">
+                        <div style="color: gray; font-size: small; font-weight: bold;">
                             ${r?.startYear ? r?.startYear : ''} 
                             &nbsp;&nbsp;&nbsp; 
                             ${r?.rating?.aggregateRating != null ? '⭐ ' + r?.rating?.aggregateRating : ''}
                         </div>
+                        <br/>
+
+                        <img src="${r?.primaryImage?.url}" width="100%" height="auto" style="border-radius: 6px;" />
                         <div>
                             ${
                                 r?.type === 'movie'
@@ -57,7 +58,7 @@ async function search(e) {
                                         <div>
                                             <label for="episodes-${r?.id}">Episode</label>
                                             <br/>
-                                            <select style="min-width: 100px" id="episodes-${r?.id}" onchange="getMagnetsTv('${r?.id}', '${r?.type}')">
+                                            <select style="max-width: 300px; min-width: 100px" id="episodes-${r?.id}" onchange="getMagnetsTv('${r?.id}', '${r?.type}')">
                                                 <option value="">-</option>
                                                 <option value="">Loading...</option>                                                
                                             </select>
@@ -69,6 +70,7 @@ async function search(e) {
                             }
                         </div>
                     </div>
+                    
                 `;
                 document.querySelector("#results").innerHTML += resultsHtml;
                 resultsHtml = "";
@@ -82,7 +84,7 @@ async function search(e) {
 
 async function getMagnets(id, type, season=null, episode=null) {
     if (!id || !type) {
-        return `<div style="color:red">invalid id "${id}" or type "${type}" </div>`
+        return `<br/><div style="color:red">invalid id "${id}" or type "${type}" </div><br/>`
     }
 
     const base_url = "https://torrentio.strem.fun/providers=yts,eztv,rarbg,1337x%7Cqualityfilter=brremux,hdrall,dolbyvision,dolbyvisionwithhdr,threed,4k,other,scr,cam,unknown%7Climit=1";
@@ -99,7 +101,7 @@ async function getMagnets(id, type, season=null, episode=null) {
 
         if (response.status !== 200) {
             error = JSON.stringify(await response.json());
-            return `<div style="color: red"> <p>STATUS CODE: ${response.status}</p> <p>ERROR: ${error}</p></div>`;
+            return `<br/><div style="color: red"> <p>STATUS CODE: ${response.status}</p> <p>ERROR: ${error}</p></div><br/>`;
         }
 
         const data = await response.json();
@@ -107,7 +109,7 @@ async function getMagnets(id, type, season=null, episode=null) {
         const streams = data.streams || [];
 
         if (streams.length === 0) {
-            return "No streams found";
+            return "<br/>No streams found<br/>";
         }
 
         let html = "<br/>";
@@ -205,7 +207,7 @@ async function getEpisodes(event, id) {
         optionsHTML += `
         <option value="${e?.episodeNumber}">
             ${e?.episodeNumber}. ${e?.title}
-            <span> ${e?.releaseDate ? `${e.releaseDate?.day}/${e?.releaseDate?.month}/${e?.releaseDate?.year}` : ""}</span>
+            <span>${e?.releaseDate?.day ? e?.releaseDate?.day + "/" : ""}${e?.releaseDate?.month ? e?.releaseDate?.month + "/" : ""}${e?.releaseDate?.year ? e?.releaseDate?.year : ""}</span>
         </option>`;
     } 
 
