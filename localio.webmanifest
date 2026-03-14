@@ -4,7 +4,7 @@
     "description": "localio",
     "icons": [
       {
-        "src": "/images/localio.png",
+        "src": "/localio/images/localio.png",
         "sizes": "512x512",
         "type": "image/png"
       }
