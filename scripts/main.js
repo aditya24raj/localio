@@ -277,7 +277,7 @@ if ('serviceWorker' in navigator) {
             //   }
 
             // In production, use the normal service worker registration
-            reg = await navigator.serviceWorker.register('/scripts/service-worker.js');
+            reg = await navigator.serviceWorker.register('/localio/scripts/service-worker.js');
             console.log('Service worker registered! 😎', reg);
         } catch (err) {
             console.log('😥 Service worker registration failed: ', err);
