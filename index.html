@@ -10,12 +10,15 @@
     <link rel="stylesheet" href="styles/reset.css">
     <link rel="stylesheet" href="styles/styles.css">
 
-    <link rel="manifest" href="localio.webmanifest" />
+    <!-- <link rel="manifest" href="localio.webmanifest" /> -->
+    <link rel="manifest" href="manifest.json" />
+    <script>navigator.serviceWorker.register("scripts/service-worker.js")</script> 
+
 </head>
 
 <body>
     <main>
-        <h1 style="max-width: fit-content;"><a href="/localio/">localio</a></h1>
+        <h1 style="max-width: fit-content;"><a style="color: dimgray" href="/localio/">localio</a></h1>
 
         <input type="search" id="imdb-search" name="q" />
         <button style="margin-left: 9px" title="search" onclick="search(false)">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</button>

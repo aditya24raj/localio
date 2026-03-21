@@ -31,55 +31,59 @@ async function search(clearCache) {
         results = await response.json();
 
         resultsElement.innerHTML = "";
-        let resultsHtml = `<h3 style='color: gray;'>search results</h3>`;
+        let resultsHtml = `<h3 style='color: dimgray;'>search results</h3><br/>`;
         let index = 0;
         let movieIds = [];
         for (const r of results.titles) {
             if (r?.primaryImage?.url) {
+                const img = new Image();
+                img.src = r.primaryImage.url;
+                
                 index += 1;
                 resultsHtml += `
-                    <div onhover="alert()" class="result-card" style='background-color: black; padding: 12px; border-radius: 12px; margin: 10px 0px; max-width: 500px;' data-type="${r?.type}" data-imdbId="${r?.id}">
-                        <div style="font-weight:900; color: gray; margin-bottom: 6px;"># ${`${index}`.padStart(3, 0)}</div>
-                        
-                        <div class="original-title" style="font-weight:bolder;">${r?.originalTitle}</div> 
-                        <div style="color: gray; font-size: small; font-weight: bold;">
-                            ${r?.startYear ? r?.startYear : ''} 
-                            &nbsp;&nbsp;&nbsp; 
-                            ${r?.rating?.aggregateRating != null ? '⭐ ' + r?.rating?.aggregateRating : ''}
+                    <div class="card" data-type="${r?.type}" data-imdbId="${r?.id}" style="display: flex; flex-direction: column; justify-content: flex-end; background-image: linear-gradient(transparent, black) , url('${r?.primaryImage?.url}'); background-size: cover; background-position: center; margin-bottom: 15px; padding: 12px; max-width: 100%; max-height: 1067px; aspect-ratio: 9/16; border-radius: 12px;"> 
+                        <div style="">  
+                            <div style="font-weight: 900; font-size: 30px; text-wrap-style: pretty;">${r?.originalTitle}</div>  
+                            <div style="font-size: smaller;">
+                                <span style="">${r?.type === 'movie' ? 'Movie' : 'TV Show'}</span>
+                                <span style="">${r?.startYear ? '&nbsp; · &nbsp;' + r?.startYear : ''}</span>
+                                <span style="">${r?.rating?.aggregateRating != null ? '&nbsp; · &nbsp; ⭐ ' + '<span style="color: gold">' + r?.rating?.aggregateRating + '</span>' : ''}</span>
+                            </div>
                         </div>
-                        <br/>
 
-                        <img src="${r?.primaryImage?.url}" width="100%" height="auto" style="border-radius: 6px;" />
                         <div>
-                            ${r?.type === 'movie'
-                        ?
-                        `<div id="movie-magnets-${r?.id}">Loading...</div>`
-                        :
-                        `<br/>
-                                    <div style="display: flex; gap: 10px; max-width: 300px">
-                                        <div>
-                                            <label for="seasons-${r?.id}">Season</label>
-                                            <br/>
-                                            <select style="max-width: 50px; min-width: 50px;" id="seasons-${r?.id}" onclick="getSeasons('${r?.id}')" onchange="getEpisodes(event, '${r?.id}')">
-                                                <option value="">-</option>
-                                                <option value="">Loading...</option>
-                                            </select>
-                                        </div>
-
-                                        <div>
-                                            <label for="episodes-${r?.id}">Episode</label>
-                                            <br/>
-                                            <select style="max-width: 300px; min-width: 100px" id="episodes-${r?.id}" onchange="getMagnetsTv('${r?.id}', '${r?.type}')">
-                                                <option value="">-</option>
-                                                <option value="">Loading...</option>                                                
-                                            </select>
-                                        </div>
+                            ${
+                                r?.type === 'movie'
+                                ?
+                                `<div id="movie-magnets-${r?.id}" style="">Loading...</div>`
+                                :
+                                `
+                                <br/>
+                                <div style="display: flex; gap: 10px; max-width: 300px">
+                                    <div>
+                                        <label for="seasons-${r?.id}">Season</label>
+                                        <br/>
+                                        <select style="max-width: 50px; min-width: 50px;" id="seasons-${r?.id}" onclick="getSeasons('${r?.id}')" onchange="getEpisodes(event, '${r?.id}')">
+                                            <option value="">-</option>
+                                            <option value="">Loading...</option>
+                                        </select>
                                     </div>
-                                    <br/>
-                                    <div id="tv-magnets-${r?.id}"></div>
-                                    `
-                    }
+
+                                    <div>
+                                        <label for="episodes-${r?.id}">Episode</label>
+                                        <br/>
+                                        <select style="max-width: 300px; min-width: 100px" id="episodes-${r?.id}" onchange="getMagnetsTv('${r?.id}', '${r?.type}')">
+                                            <option value="">-</option>
+                                            <option value="">Loading...</option>                                                
+                                        </select>
+                                    </div>
+                                </div>
+                                <br/>
+                                <div id="tv-magnets-${r?.id}"></div>
+                                `
+                            }
                         </div>
+                            
                     </div>
                     
                 `;
@@ -138,7 +142,7 @@ async function getMagnets(id, type, season = null, episode = null) {
                 ? `magnet:?xt=urn:btih:${s.infoHash}`
                 : "#";
 
-            html += `<a style="word-break: break-word;" href=${magnet}>${s.title}</a><br/><br/>`;
+            html += `<div style="background-color: #1212124f; padding: 6px; border-radius: 6px;"><a style="word-break: break-word; color: cornflowerblue;" href=${magnet}>${s.title}</a></div><br/>`;
         });
 
         return html;
@@ -258,29 +262,29 @@ async function cachedFetch(url) {
 
 
 // Register the service worker
-if ('serviceWorker' in navigator) {
-    // Wait for the 'load' event to not block other work
-    window.addEventListener('load', async () => {
-        // Try to register the service worker.
-        try {
-            // Capture the registration for later use, if needed
-            let reg;
+// if ('serviceWorker' in navigator) {
+//     // Wait for the 'load' event to not block other work
+//     window.addEventListener('load', async () => {
+//         // Try to register the service worker.
+//         try {
+//             // Capture the registration for later use, if needed
+//             let reg;
 
-            // Use ES Module version of our Service Worker in development
-            //   if (import.meta.env?.DEV) {
-            //     reg = await navigator.serviceWorker.register('/scripts/service-worker.js', {
-            //       type: 'module',
-            //     });
-            //   } else {
-            //     // In production, use the normal service worker registration
-            //     reg = await navigator.serviceWorker.register('/scripts/service-worker.js');
-            //   }
+//             // Use ES Module version of our Service Worker in development
+//             //   if (import.meta.env?.DEV) {
+//             //     reg = await navigator.serviceWorker.register('/scripts/service-worker.js', {
+//             //       type: 'module',
+//             //     });
+//             //   } else {
+//             //     // In production, use the normal service worker registration
+//             //     reg = await navigator.serviceWorker.register('/scripts/service-worker.js');
+//             //   }
 
-            // In production, use the normal service worker registration
-            reg = await navigator.serviceWorker.register('/localio/scripts/service-worker.js');
-            console.log('Service worker registered! 😎', reg);
-        } catch (err) {
-            console.log('😥 Service worker registration failed: ', err);
-        }
-    });
-}
+//             // In production, use the normal service worker registration
+//             reg = await navigator.serviceWorker.register('/localio/scripts/service-worker.js');
+//             console.log('Service worker registered! 😎', reg);
+//         } catch (err) {
+//             console.log('😥 Service worker registration failed: ', err);
+//         }
+//     });
+// }
